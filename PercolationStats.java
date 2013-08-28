@@ -3,26 +3,32 @@ public class PercolationStats {
 	private double stddev;
 	private double confLo;
 	private double confHi;
-	private Percolation perc;
 	private double arr[]; // stores threshold of each percolation
 
-	private int countOpenSites(Percolation p, int N) {
-		int openSiteCount = 0;
-		// there will be N*N (+2) sites from 1 to N*N. 0 and N*N+1 are virtual
-		// sites.
-		for (int row = 1; row <= N; row++) {
-			for (int col = 1; col <= N; col++) {
-				if (p.isOpen(row, col))
-					openSiteCount++;
-			}
+	private double runPercolation(int N){
+		int row , col;
+		int opensites = 0;
+		Percolation perc = new Percolation(N);
+	
+		while(true){			
+			row = (int)( 1 + Math.random()*N );
+			col = (int)( 1 + Math.random()*N );
+//			++step;
+			if( !perc.isOpen( row,col ) ){
+//				String op = String.format("%2d. opening : %d,%d",step,row,col);
+//				System.out.println(op);
+				perc.open(row,col);
+				++opensites;
+				if(perc.percolates()){
+//					System.out.println("System now percolates !\n total open points : " + opensites);
+					break;
+				}
+			}else{
+//				String op = String.format("%2d. site %d,%d is open",step,row,col);
+//				System.out.println(op);
+			}			
 		}
-		return openSiteCount;
-	}
-
-	private double calculateThreshold(Percolation p, int N) {
-		int openSites = countOpenSites(p, N);
-		double t = (double) openSites / (N * N);
-		return t;
+		return (double)opensites/(N*N);
 	}
 
 	private void calculateData() {
@@ -56,25 +62,22 @@ public class PercolationStats {
 	public PercolationStats(int N, int T) {
 		arr = new double[T];
 		for (int i = 0; i < T; i++) {
-			perc = new Percolation(N);
-			arr[i] = calculateThreshold(perc, N);
+			arr[i] = runPercolation(N);
 		}
 		calculateData();
 	}
-
 	public static void main(String[] args) {
 		final long StartTime = System.currentTimeMillis();
-		if (Integer.parseInt(args[0]) < 0 || Integer.parseInt(args[1]) < 0 ) {
-			throw new java.lang.IllegalArgumentException();
+		int N = Integer.parseInt(args[0]);
+		int T = Integer.parseInt(args[1]);
+		if(!(N>1 && T>1)){
+			throw new IllegalArgumentException(" N , T both must be positive");
 		}
-		PercolationStats P = new PercolationStats(Integer.parseInt(args[0]),
-				Integer.parseInt(args[1]));
+		PercolationStats P = new PercolationStats(N,T);
 		System.out.println("mean						= " + P.mean);
 		System.out.println("stddev						= " + P.stddev);
-		System.out.println("95% confidence interval	= " + P.confLo + " , "
-				+ P.confHi);
-		System.out.println("\n\n Total time taken : "
-				+ (System.currentTimeMillis() - StartTime));
+		System.out.println("95% confidence interval	= " + P.confLo + " , " +P.confHi);
+		System.out.println("\n\n Total time taken : " + (System.currentTimeMillis() - StartTime));
 	}
 
 }
